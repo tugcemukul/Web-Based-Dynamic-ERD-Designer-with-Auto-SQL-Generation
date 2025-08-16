@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ERD to SQL</title>
+    <!-- jQuery ve JointJS kütüphanelerini burada yüklüyoruz -->
+    <script src="jquery.js"></script>
+    <script src="joint.js"></script>
+    <script type="module" src="./js/main.js"></script>
+    <link rel="stylesheet" href="./css/style.css">
+
+    <style>
+
+
+        /* SQL Anahtar Kelimeler */
+        .keyword {
+            color: #9b59b6; /* Mor renk */
+            font-weight: bold;
+        }
+
+        /* Veri Türleri */
+        .datatype {
+            color: #3498db; /* Mavi renk */
+            font-style: italic;
+        }
+
+        /* Yorumlar */
+        .comment {
+            color: #95a5a6; /* Gri renk */
+            font-style: italic;
+        }
+
+        #copy-sql-btn {
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            margin-top: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        #copy-sql-btn:hover {
+            background-color: #9b59b6;
+        }
+        /* Genel Yazı Tipi */
+        #sql-code-container {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #ffffff;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* SQL Kod Alanı */
+        .sql-container {
+            background: #ffffff;
+            color: #d4d4d4;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+            overflow: auto;
+            max-height: 300px;
+            white-space: pre-wrap;
+            border: 1px solid #ccc;
+        }
+
+        .sql-container .keyword {
+            color: #c586c0; /* Mor */
+            font-weight: bold;
+        }
+
+        .sql-container .datatype {
+            color: #569cd6; /* Mavi */
+        }
+
+        .sql-container .identifier {
+            color: #dcdcaa; /* Sarımsı beyaz */
+        }
+
+
+
+        /* Sidebar Tasarımı */
+        #diagram-list {
+            position: fixed;
+            top: 0;
+            right: -300px; /* Başlangıçta gizli */
+            width: 300px;
+            height: 100%;
+            background: #fff;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+            transition: right 0.3s ease-in-out;
+            z-index: 1100;
+            overflow-y: auto;
+            padding-top: 0px; /* Navbar yüksekliğine göre */
+            border-left: 1px solid #ccc;
+        }
+
+        #diagram-list.active {
+            right: 0; /* Aktif olduğunda görünür */
+        }
+
+        #diagram-list .sidebar-header {
+            background: #9b59b6;
+            color: white;
+            padding: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1200;
+        }
+
+        #diagram-list .sidebar-header h3 {
+            margin: 0; /* Başlangıçtaki boşluk kaldırıldı */
+            padding: 0; /* Ekstra boşluk kaldırıldı */
+            font-size: 1.2rem;
+            font-weight: bold;
+            flex-grow: 1; /* Başlık, tam olarak hizalanır */
+        }
+
+        #diagram-list .sidebar-header button {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        #diagram-list .sidebar-header button:hover {
+            transform: scale(1.1);
+        }
+
+        #diagram-list ul {
+            list-style: none;
+            padding: 10px;
+            margin: 0;
+        }
+
+        #diagram-list ul li {
+            background: #f9f9f9;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: background 0.3s, box-shadow 0.3s;
+            font-weight: bold;
+            color: #9b59b6;
+        }
+
+        #diagram-list ul li:hover {
+            background: #f0f0f0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #diagram-list ul li strong {
+            display: block;
+            font-size: 1rem;
+            color: #333;
+        }
+
+        #diagram-list ul li small {
+            display: block;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* Sidebar Header Butonları */
+        #diagram-list .sidebar-header .nav-button {
+            padding: 10px 15px;
+            border: none;
+            background: #9b59b6;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            margin: 5px;
+        }
+
+        #diagram-list .sidebar-header .nav-button i {
+            margin-right: 5px;
+        }
+
+        #diagram-list .sidebar-header .nav-button:hover {
+            background: #8e44ad;
+        }
+
+        #diagram-list .sidebar-header .nav-button:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark">
+    <div class="nav-buttons">
+        <button id="add-table">Add Table</button>
+        <button id="add-relationship">Add Relationship</button>
+        <button id="delete-btn">Delete</button>
+        <button id="undo-btn">Undo</button>
+        <button id="redo-btn">Redo</button>
+        <button id="save-diagram">Save Diagram</button>
+        <button id="update-diagram">Update Diagram</button>
+        <button id="load-diagram">Load Diagram</button>
+        <button id="list-diagrams">List Diagrams</button>
+        <button id="save-to-desktop">Save to Desktop</button>
+        <button id="load-from-desktop">Load from Desktop</button>
+        <button id="clear-diagram">Clear Diagram</button>
+        <button id="generate-sql">Generate SQL</button>
+        <button id="show-diagram" style="display:none;">Show Diagram</button>
+        <button id="hide-diagram">Hide Diagram</button>
+        <button id="show-sql">Show SQL</button>
+        <button id="hide-sql" style="display:none;">Hide SQL</button>
+    </div>
+</nav>
+
+
+<div id="diagram-list" class="sidebar">
+    <div class="sidebar-header">
+        <button id="load-diagramfromList" class="nav-button">
+            <i class="fa fa-upload"></i> Load Diagram
+        </button>
+        <button id="delete-diagram" class="nav-button">Delete Diagram</button>
+        <button id="close-diagram-list" class="nav-button">
+            <i class="fa fa-times"></i> Close
+        </button>
+    </div>
+    <ul></ul>
+</div>
+
+<div class="container bg-dark">
+    <!-- Diagram Çizim Alanı -->
+    <div id="diagram-container"></div>
+
+    <button id="copy-sql-btn">Copy SQL Code</button>
+    <!-- SQL Kodu Görüntüleme Alanı -->
+    <div id="sql-code-container" class="sql-container">
+        <pre id="sql-code"></pre>
+    </div>
+</div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.4.0/backbone-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jointjs/3.4.2/joint.min.js"></script>
+</body>
+</html>

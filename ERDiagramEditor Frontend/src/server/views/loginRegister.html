@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş / Kayıt Sayfası</title>
+    <style> 
+        * {
+            box-sizing: border-box; 
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #71b7e6, #9b59b6);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            width: 350px;
+            position: relative;
+        }
+
+        .toggle-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .toggle-buttons button {
+            width: 48%;
+            padding: 10px;
+            border: none;
+            background: #f0f0f0;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s;
+            font-weight: bold;
+        }
+
+        .toggle-buttons button.active {
+            background: #9b59b6;
+            color: #fff;
+        }
+
+        form {
+            display: none;
+            flex-direction: column;
+        }
+
+        form.active {
+            display: flex;
+        }
+
+        input {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button[type="submit"] {
+            padding: 10px;
+            border: none;
+            background: #9b59b6;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button[type="submit"]:hover {
+            background: #8e44ad;
+        }
+
+        .switch-link {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .switch-link a {
+            color: #9b59b6;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .switch-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container"> 
+    <div class="toggle-buttons">
+        <button id="login-toggle" class="active">Giriş Yap</button>
+        <button id="register-toggle">Kayıt Ol</button>
+    </div>
+
+    <!-- Giriş Formu -->
+    <form id="login-form" class="active">
+        <input type="email" id="login-email" placeholder="Email" required />
+        <input type="password" id="login-password" placeholder="Şifre" required />
+        <button type="submit">Giriş Yap</button>
+    </form>
+
+    <!-- Kayıt Formu -->
+    <form id="register-form">
+        <input type="text" id="username" placeholder="Kullanıcı Adı" required />
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" id="password" placeholder="Şifre" required />
+        <button type="submit">Kayıt Ol</button>
+    </form>
+</div>
+
+<script>
+    const loginToggle = document.getElementById('login-toggle');
+    const registerToggle = document.getElementById('register-toggle');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+
+    // Giriş Yap ve Kayıt Ol butonları arasında geçiş yapıldığında aktif olan form ve buton vurgulanır
+    loginToggle.addEventListener('click', () => { 
+        loginToggle.classList.add('active');
+        registerToggle.classList.remove('active');
+        loginForm.classList.add('active');
+        registerForm.classList.remove('active');
+    });
+
+    registerToggle.addEventListener('click', () => {
+        registerToggle.classList.add('active');
+        loginToggle.classList.remove('active');
+        registerForm.classList.add('active');
+        loginForm.classList.remove('active');
+    });
+
+    // Kayıt Formu Gönderme
+    registerForm.addEventListener('submit', async (event) => {
+        event.preventDefault(); //formun sayfayı yenilemesini engeller
+
+        //kullanıcı formundaki değerler alınır
+        const username = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try { //kayıt isteği sunucuya gönderilir
+            const response = await fetch('http://localhost:5007/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password })
+                // Kullanıcı adı, email ve şifreyi JSON formatında gönderiyoruz
+            });
+
+            if (response.ok) { // Eğer sunucu başarılı bir yanıt dönerse
+
+                alert('Kullanıcı başarıyla kaydedildi');
+                // Kayıt olduktan sonra otomatik olarak giriş formuna geçiş yapabilirsiniz
+                loginToggle.click();
+
+            } else { //Başarısız Kayıt
+                const error = await response.json();
+                alert(error.error || 'Kayıt sırasında bir hata oluştu');
+            }
+        } catch (err) { // Sunucu bağlantısında bir sorun olduğunda çalışır
+            alert('Sunucuya bağlanırken bir hata oluştu');
+            console.error(err);
+        }
+    });
+
+    // Giriş Formu Gönderme
+    loginForm.addEventListener('submit', async (event) => { //submit butonuna basıldığında
+        event.preventDefault(); //formun sayfayı yenilemesi engellenir
+
+        //formdan bilgiler alınıyor
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        try { //sunucuya giriş isteği gönderiliyor POST METODU İLE API'YA GÖNDERME
+            const response = await fetch('http://localhost:5007/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+                // Email ve şifre JSON formatında isteğin gövdesine ekleniyor
+            });
+
+            if (response.ok) { // Sunucudan olumlu bir yanıt alınırsa
+                const data = await response.json(); // Yanıtı JSON formatında çözümle
+                localStorage.setItem('token', data.token); // Kullanıcının giriş yaparken aldığı JWT (Token) tarayıcıda saklanır
+                alert('Giriş başarılı');
+
+                // Giriş başarılı olduğunda yönlendirme
+                window.location.href = 'homepage'; // homepage sayfasına yönlendir
+            } else {
+                const error = await response.json();
+                alert(error.error || 'Giriş sırasında bir hata oluştu');
+            }
+        } catch (err) { // Sunucuya bağlanılamaması gibi ağ hatalarını yakalar
+            alert('Sunucuya bağlanırken bir hata oluştu');
+            console.error(err);
+        }
+    });
+</script>
+
+</body>
+</html>
